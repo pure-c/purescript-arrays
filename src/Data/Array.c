@@ -9,15 +9,12 @@ PURS_FFI_FUNC_2(Data_Array_range, _start, _end, {
 	const purs_any_int_t end = purs_any_get_int(_end);
 	purs_any_int_t step = start > end ? -1 : 1;
 	purs_vec_t * result = (purs_vec_t *) purs_vec_new();
-	purs_vec_reserve(result, step * (end - start) + 1);
 	purs_any_int_t i = start;
-	purs_any_int_t n = 0;
 	while (i != end) {
-		result->data[n++] = purs_any_int_new(i);
+		purs_vec_push_mut(result, purs_any_int_new(i));
 		i += step;
 	}
-	result->data[n] = purs_any_int_new(i);
-	result->length = step * (end - start) + 1;
+	purs_vec_push_mut(result, purs_any_int_new(i));
 	return purs_any_array_new(result);
 });
 
@@ -89,7 +86,7 @@ PURS_FFI_FUNC_2(Data_Array_snoc, _l, e, {
 PURS_FFI_FUNC_3(Data_Array_uncons$, empty, next, _xs, {
 	const purs_vec_t * xs = purs_any_get_array(_xs);
 	if (xs->length == 0) {
-		return purs_any_foreign_new(NULL, NULL);
+		return purs_any_app(empty, NULL);
 	} else {
 		return purs_any_app(purs_any_app(next, xs->data[0]), purs_any_array_new(purs_vec_slice(xs, 1)));
 	}
@@ -152,7 +149,7 @@ PURS_FFI_FUNC_4(Data_Array__deleteAt, just, nothing, _i, _l, {
 PURS_FFI_FUNC_5(Data_Array__updateAt, just, nothing, _i, a, _l, {
 	const purs_any_int_t i = purs_any_get_int(_i);
 	const purs_vec_t * l = purs_any_get_array(_l);
-	if (i < 0 || i > l->length) {
+	if (i < 0 || i >= l->length) {
 		return nothing;
 	}
 	purs_vec_t * l1 = (purs_vec_t *) purs_vec_copy(l);
@@ -273,9 +270,7 @@ PURS_FFI_FUNC_2(Data_Array_take, _n, _l, {
 	for (purs_any_int_t i = 0; i < n; i ++) {
 		if (i >= 0 && i < l->length) {
 			purs_vec_push_mut(out, l->data[i]);
-			} else {
-				break;
-			}
+		}
 	}
 	return purs_any_array_new(out);
 });
@@ -283,13 +278,12 @@ PURS_FFI_FUNC_2(Data_Array_take, _n, _l, {
 PURS_FFI_FUNC_2(Data_Array_drop, _n, _l, {
 	const purs_any_int_t n = purs_any_get_int(_n);
 	const purs_vec_t * l = purs_any_get_array(_l);
+	if (n < 1) {
+		return _l;
+	}
 	purs_vec_t * out = (purs_vec_t *) purs_vec_new();
-	for (purs_any_int_t i = n; i < l->length; i ++) {
-		if (i >= 0 && i < l->length) {
-			purs_vec_push_mut(out, l->data[i]);
-			} else {
-				break;
-			}
+	for (purs_any_int_t i = n; i < l->length; i++) {
+		purs_vec_push_mut(out, l->data[i]);
 	}
 	return purs_any_array_new(out);
 });

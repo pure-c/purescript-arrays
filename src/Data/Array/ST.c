@@ -33,7 +33,7 @@ PURS_FFI_FUNC_3(Data_Array_ST_pushAll, _as, _xs, _, {
 	purs_vec_foreach(as, tmp, i) {
 		purs_vec_push_mut(xs, tmp);
 	}
-	return purs_any_int_new(as -> length);
+	return purs_any_int_new(xs -> length);
 });
 
 PURS_FFI_FUNC_5(Data_Array_ST_splice, _i, _howMany, _bs, _xs, _, {
