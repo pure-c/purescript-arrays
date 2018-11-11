@@ -46,10 +46,10 @@ PURS_FFI_FUNC_1(Data_Array_listToArray, list, {
 });
 
 PURS_FFI_FUNC_2(Data_Array_fromFoldableImpl, foldr, xs, {
-	return purs_any_app(Data_Array_listToArray$,
+	return purs_any_app(Data_Array_listToArray,
 				purs_any_app(
 					purs_any_app(
-						purs_any_app(foldr, Data_Array_curryCons$),
+						purs_any_app(foldr, Data_Array_curryCons),
 						NULL
 					),
 					xs

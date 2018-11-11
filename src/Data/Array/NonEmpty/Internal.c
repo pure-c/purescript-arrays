@@ -55,7 +55,7 @@ const purs_any_t * buildFrom(
 					purs_any_app(
 						apply,
 						purs_any_app(
-							purs_any_app(map, consList$),
+							purs_any_app(map, consList),
 							purs_any_app(f, x)
 						)
 					),
@@ -75,14 +75,14 @@ const purs_any_t * go(
 	} else {
 		const purs_any_t * last = xs->data[currentLen - 1];
 		const purs_any_t * fn = go(apply, map, f, buildFrom(apply, map, f, last, acc), currentLen - 1, xs);
-		return purs_any_app(Cont$, fn);
+		return purs_any_app(Cont, fn);
 	}
 }
 
 PURS_FFI_FUNC_4(Data_Array_NonEmpty_Internal_traverse1Impl, apply, map, f, _array, {
 	const purs_vec_t * array = purs_any_get_array(_array);
 	const purs_any_t * acc = purs_any_app(
-					purs_any_app(map, finalCell$),
+					purs_any_app(map, finalCell),
 					purs_any_app(f, array->data[array->length - 1]));
 	const purs_any_t * result = go(apply, map, f, acc, array->length - 1, array);
 	while (1) {
@@ -98,5 +98,5 @@ PURS_FFI_FUNC_4(Data_Array_NonEmpty_Internal_traverse1Impl, apply, map, f, _arra
 		}
 	}
 
-	return purs_any_app(purs_any_app(map, listToArray$), result);
+	return purs_any_app(purs_any_app(map, listToArray), result);
 });
