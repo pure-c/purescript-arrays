@@ -1,5 +1,6 @@
 module Data.Array.NonEmpty.Internal (NonEmptyArray) where
 
+
 import Prelude
 
 import Control.Alt (class Alt)
