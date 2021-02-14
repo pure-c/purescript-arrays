@@ -84,16 +84,24 @@ PURS_FFI_FUNC_3(Data_Array_ST_sortByImpl, comp, _xs, _) {
 	purs_int_t swapped;
 	purs_any_t tmp;
 
+	if (purs_vec_is_empty(xs)) {
+		PURS_ANY_RETAIN(_xs);
+		return _xs;
+	}
+
 	for (i = 0; i < xs->length-1; i++) {
 		swapped = 0;
 		for (j = 0; j < xs->length-i-1; j++) {
-			purs_any_t r = purs_any_app(purs_any_app(comp, xs->data[j]), xs->data[j+1]);
+			purs_any_t tmp1 = purs_any_app(comp, xs->data[j]);
+			purs_any_t r = purs_any_app(tmp1, xs->data[j+1]);
 			if (purs_any_force_int(r) > 0) {
 				tmp = xs->data[j];
 				xs->data[j] = xs->data[j+1];
 				xs->data[j+1] = tmp;
 				swapped = 1;
 			}
+			PURS_ANY_RELEASE(r);
+			PURS_ANY_RELEASE(tmp1);
 		}
 
 		// IF no two elements were swapped by inner loop, then break
@@ -102,6 +110,7 @@ PURS_FFI_FUNC_3(Data_Array_ST_sortByImpl, comp, _xs, _) {
 		}
 	}
 
+	PURS_ANY_RETAIN(_xs);
 	return _xs;
 }
 
