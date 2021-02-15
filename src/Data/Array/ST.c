@@ -37,39 +37,72 @@ PURS_FFI_FUNC_3(Data_Array_ST_pushAll, _as, _xs, _) {
 	return purs_any_int(xs -> length);
 }
 
-PURS_FFI_FUNC_5(Data_Array_ST_splice, _i, _howMany, _bs, _xs, _) {
-	purs_int_t i = purs_any_force_int(_i);
-	purs_int_t howMany = purs_any_force_int(_howMany);
-	const purs_vec_t *bs = purs_any_force_array(_bs);
-	purs_vec_t *xs = (purs_vec_t *) purs_any_unsafe_get_array(_xs);
-	purs_vec_t *removed = (purs_vec_t *) purs_vec_new();
-	purs_vec_t *head = (purs_vec_t *) purs_vec_new();
-	purs_vec_t *tail = (purs_vec_t *) purs_vec_new();
-	purs_any_t tmp;
-	purs_int_t j;
-	purs_vec_foreach(xs, tmp, j) {
-		if (j >= i) {
-			if (removed->length < howMany) {
-				purs_vec_push_mut(removed, tmp);
-			} else {
-				purs_vec_push_mut(tail, tmp);
-			}
-		} else {
-			purs_vec_push_mut(head, tmp);
+PURS_FFI_FUNC_5(Data_Array_ST_splice, _start, _deleteCount, _items, _arr, _) {
+	purs_int_t sz = 0, items_len;
+	purs_int_t start = purs_any_force_int(_start);
+	purs_int_t delete_count = purs_any_force_int(_deleteCount);
+	purs_vec_t *arr = (purs_vec_t*) purs_any_force_array(_arr);
+	const purs_vec_t *items = purs_any_force_array(_items);
+	purs_vec_t *removed = NULL;
+	purs_any_t ret = purs_any_array(removed);
+
+	if (purs_vec_is_empty(arr)) {
+		goto end;
+	}
+
+	/* determine starting point */
+	if (start > arr->length) {
+		start = arr->length;
+	} else if (start < 0) {
+		start = arr->length - start;
+		if (start < 0) {
+			start = 0;
 		}
 	}
-	purs_vec_reserve(xs, head->length + tail->length + bs->length);
-	purs_vec_foreach(bs, tmp, j) {
-		xs->data[head->length + j] = tmp;
+
+	/* determine delete count */
+	if (delete_count < 0)
+		delete_count = 0;
+	if (delete_count >= arr->length - start)
+		delete_count = arr->length - start; // delete all
+
+	if (delete_count > 0) {
+		removed = (purs_vec_t*) purs_vec_new1(delete_count);
+		removed->length = delete_count;
+		ret = purs_any_array(removed);
+		for (int i = start, j = 0; j < delete_count; i++, j++) {
+			removed->data[j] = arr->data[i];
+			PURS_ANY_RETAIN(removed->data[j]);
+		}
 	}
-	purs_vec_foreach(tail, tmp, j) {
-		xs->data[head->length + bs->length + j] = tmp;
+
+	/* determine how many items to delete, or add to adjust space. */
+	/* TODO we're taking a semi-efficient approach here:
+	   we're overriding the elements we can, however, if there's
+	   insufficient space we'll use 'vec_insert' to introduce elements
+	   one by one into the middle of the array which may incur a 'realloc'
+	   and does incur a 'memmove' per call. A single 'realloc'/'memmove'
+	   would be preferable but require an update to purec / vec.h. */
+	items_len = purs_vec_length(items);
+	delete_count = delete_count - items_len;
+	if (delete_count > 0) purs_vec_splice_mut(arr, start, delete_count);
+	delete_count = delete_count + items_len;
+
+	for (int i = start, k = 0; k < items_len; i++, k++) {
+		if (delete_count > 0) {
+			PURS_ANY_RELEASE(arr->data[i]);
+			arr->data[i] = items->data[k];
+			PURS_ANY_RETAIN(arr->data[i]);
+			delete_count--;
+			continue;
+		}
+		purs_vec_insert_mut(&arr, i, items->data[k]);
 	}
-	xs->length = head->length + tail->length + bs->length;
-	PURS_RC_RELEASE(bs);
-	PURS_RC_RELEASE(head);
-	PURS_RC_RELEASE(tail);
-	return purs_any_array(removed);
+
+end:
+	PURS_RC_RELEASE(arr);
+	PURS_RC_RELEASE(items);
+	return ret;
 }
 
 PURS_FFI_FUNC_2(Data_Array_ST_copyImpl, _xs, _) {
