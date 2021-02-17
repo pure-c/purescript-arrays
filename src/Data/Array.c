@@ -38,9 +38,9 @@ PURS_FFI_FUNC_2(Data_Array_replicate, _count, value) {
 	return purs_any_array(result);
 }
 
+/* build a cons list from an array [X, [X, ...]] */
 PURS_FFI_FUNC_2(Data_Array_curryCons, head, tail) {
-	const purs_vec_t *cons = purs_vec_new_va(2, head, tail);
-	return purs_any_array(cons);
+	return purs_any_array(purs_vec_new_va(2, head, tail));
 }
 
 PURS_FFI_FUNC_2(Data_Array_fromFoldableImpl, foldr, xs) {
