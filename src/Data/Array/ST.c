@@ -147,6 +147,9 @@ PURS_FFI_FUNC_3(Data_Array_ST_sortByImpl, comp, _xs, _) {
 	return _xs;
 }
 
+static purs_str_t value_str = purs_str_static_lazy("value");
+static purs_str_t index_str = purs_str_static_lazy("index");
+
 PURS_FFI_FUNC_2(Data_Array_ST_toAssocArray, _xs, _) {
 	const purs_vec_t *xs = purs_any_unsafe_get_array(_xs);
 	purs_int_t i;
@@ -158,8 +161,8 @@ PURS_FFI_FUNC_2(Data_Array_ST_toAssocArray, _xs, _) {
 			purs_any_record(
 				purs_record_new_va(
 					2,
-					"value", tmp,
-					"index", purs_any_int(i))));
+					&value_str, tmp,
+					&index_str, purs_any_int(i))));
 	}
 	return purs_any_array(out);
 }

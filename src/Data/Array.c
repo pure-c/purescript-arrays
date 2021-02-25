@@ -369,6 +369,9 @@ PURS_FFI_FUNC_2(Data_Array_filter, f, _xs) {
 	return purs_any_array(result);
 }
 
+static purs_str_t yes_str = purs_str_static_lazy("yes");
+static purs_str_t no_str = purs_str_static_lazy("no");
+
 PURS_FFI_FUNC_2(Data_Array_partition, f, _xs) {
 	purs_vec_t *yes = purs_vec_empty;
 	purs_vec_t *no = purs_vec_empty;
@@ -400,8 +403,8 @@ PURS_FFI_FUNC_2(Data_Array_partition, f, _xs) {
 	PURS_RC_RELEASE(xs);
 	return purs_any_record(
 		purs_record_new_va(2,
-			"yes", purs_any_array(yes),
-			"no", purs_any_array(no)));
+			&yes_str, purs_any_array(yes),
+			&no_str, purs_any_array(no)));
 }
 
 //------------------------------------------------------------------------------
